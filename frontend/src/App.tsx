@@ -3,7 +3,7 @@ import { Layout } from "./components/Layout";
 import { PublicOnly, RequireAuth } from "./components/RouteGuards";
 import { CheckEmailPage } from "./pages/CheckEmailPage";
 import { EpicsPage } from "./pages/EpicsPage";
-import { HomePage } from "./pages/HomePage";
+import { BoardPage } from "./pages/BoardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewTicketPage } from "./pages/NewTicketPage";
 import { TicketPage } from "./pages/TicketPage";
@@ -22,7 +22,7 @@ export function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* Authenticated */}
-        <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+        <Route path="/" element={<RequireAuth><BoardPage /></RequireAuth>} />
         <Route path="/teams" element={<RequireAuth><TeamsPage /></RequireAuth>} />
         <Route path="/epics" element={<RequireAuth><EpicsPage /></RequireAuth>} />
         <Route path="/tickets/new" element={<RequireAuth><NewTicketPage /></RequireAuth>} />
