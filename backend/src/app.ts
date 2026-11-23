@@ -4,6 +4,7 @@ import { requireAuth } from "./middleware/auth";
 import { sameOrigin } from "./middleware/sameOrigin";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
+import { teamsRouter } from "./routes/teams";
 
 export function createApp() {
   const app = express();
@@ -18,6 +19,7 @@ export function createApp() {
 
   // Everything below requires a verified user's session.
   app.use("/api", requireAuth);
+  app.use("/api/teams", teamsRouter);
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 
@@ -25,6 +26,17 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     }
     res.status(400).json({ error: "Please correct the highlighted fields.", code: "validation_failed", fields });
     return;
+  }
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    // Safety nets; services should normally throw a specific HttpError first.
+    if (err.code === "P2003") {
+      res.status(409).json({ error: "This record is still referenced by other records.", code: "conflict" });
+      return;
+    }
+    if (err.code === "P2025") {
+      res.status(404).json({ error: "Record not found.", code: "not_found" });
+      return;
+    }
   }
   if (err?.type === "entity.parse.failed") {
     res.status(400).json({ error: "Request body is not valid JSON.", code: "invalid_json" });

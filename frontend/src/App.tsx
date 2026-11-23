@@ -5,6 +5,7 @@ import { CheckEmailPage } from "./pages/CheckEmailPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignUpPage } from "./pages/SignUpPage";
+import { TeamsPage } from "./pages/TeamsPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 
 export function App() {
@@ -19,6 +20,7 @@ export function App() {
 
         {/* Authenticated */}
         <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+        <Route path="/teams" element={<RequireAuth><TeamsPage /></RequireAuth>} />
         <Route path="*" element={<RequireAuth><p>Page not found.</p></RequireAuth>} />
       </Routes>
     </Layout>

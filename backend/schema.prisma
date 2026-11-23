@@ -21,6 +21,17 @@ model User {
   @@map("users")
 }
 
+model Team {
+  id         String   @id @default(uuid()) @db.Uuid
+  /// Trimmed; unique case-insensitively via the expression index "teams_name_lower_key" (see migration).
+  name       String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Set by the application only when the name actually changes.
+  modifiedAt DateTime @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  @@map("teams")
+}
+
 model Session {
   /// SHA-256 of the session cookie value.
   id        String   @id

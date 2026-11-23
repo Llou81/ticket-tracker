@@ -64,6 +64,10 @@ Nothing may be required on the host except Docker + Compose.
 - Schema via automated migrations on startup.
 - NO seed/sample data on the default startup path. A fresh DB contains only schema
   + migration metadata.
+- Constraints Prisma can't express are hand-appended to migration SQL: case-insensitive
+  unique indexes on lower(...) and CHECKs for trimmed/non-empty text. Prisma ignores them
+  in `migrate diff`, so keep adding them by hand for new tables. Record-specific timestamps
+  (`modified_at`) are set in services only on real changes — never use @updatedAt.
 
 ## How to work
 - Work in small vertical slices. After each slice: run the stack and tests, show me

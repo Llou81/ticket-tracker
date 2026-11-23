@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useCurrentUser } from "../auth";
 import { UserMenu } from "./UserMenu";
 
@@ -12,6 +12,14 @@ export function Layout({ children }: { children: ReactNode }) {
         <Link to="/" className="brand">
           Ticket Tracker
         </Link>
+        {user && (
+          <nav className="nav-main">
+            <NavLink to="/" end>
+              Board
+            </NavLink>
+            <NavLink to="/teams">Teams</NavLink>
+          </nav>
+        )}
         <nav className="nav">
           {user ? (
             <UserMenu user={user} />

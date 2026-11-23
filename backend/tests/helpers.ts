@@ -1,4 +1,6 @@
 import * as argon2 from "argon2";
+import type { Express } from "express";
+import request from "supertest";
 import { vi } from "vitest";
 import { prisma } from "../src/db";
 import { mailer, type MailMessage } from "../src/services/mailer";
@@ -31,6 +33,15 @@ export async function createUser(email: string, password: string, { verified = t
       emailVerifiedAt: verified ? new Date() : null,
     },
   });
+}
+
+/** A supertest agent holding the session cookie of a fresh verified user. */
+export async function loggedInAgent(app: Express, email = "tester@example.com") {
+  await createUser(email, "test-password");
+  const agent = request.agent(app);
+  const res = await agent.post("/api/auth/login").send({ email, password: "test-password" });
+  if (res.status !== 200) throw new Error(`Login failed: ${res.status} ${res.text}`);
+  return agent;
 }
 
 /** Pulls the raw verification token out of an email's link. */
