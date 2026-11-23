@@ -19,7 +19,12 @@ SSO/OAuth, attachments, notifications, real-time updates, custom workflows.
 - Fresh database:    docker compose down -v
 - Backend logs:      docker compose logs -f backend
 - Run tests:         docker compose --profile test run --rm --build backend-test
-- Single test:       docker compose --profile test run --rm --build backend-test sh -c "npx prisma migrate deploy && npx vitest run tests/health.test.ts -t '<name>'"
+- Single test:       docker compose --profile test run --rm --build backend-test npx vitest run tests/<file>.test.ts -t "<name>"
+                     (vitest global setup resets the test DB from migrations and asserts it is empty)
+- New migration:     edit backend/schema.prisma, then generate SQL with
+                     docker compose --profile test run --rm --build backend-test npx prisma migrate diff --from-migrations migrations --to-schema-datamodel schema.prisma --shadow-database-url postgresql://test:test@db-test:5432/ticketing_test --script
+                     and save it as backend/migrations/<timestamp>_<name>/migration.sql
+- Mail catcher:      COMPOSE_PROFILES=mail, SMTP_HOST=mailpit, SMTP_PORT=1025 in .env → UI at http://localhost:8025
 - Stop test DB:      docker compose --profile test down
 - Lockfiles (no host Node): docker run --rm -v "<abs path>/backend:/app" -w /app node:24-bookworm-slim npm install --package-lock-only
 Nothing may be required on the host except Docker + Compose.

@@ -1,7 +1,8 @@
 import { createApp } from "./app";
+import { config } from "./config";
 import { prisma } from "./db";
 
-const port = Number(process.env.PORT ?? 3000);
+const port = config.port;
 
 const server = createApp().listen(port, () => {
   console.log(`API listening on port ${port}`);

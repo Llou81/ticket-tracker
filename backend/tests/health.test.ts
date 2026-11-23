@@ -22,12 +22,3 @@ describe("health", () => {
     expect(res.body).toEqual({ error: "Not found" });
   });
 });
-
-describe("fresh database", () => {
-  it("contains no application tables besides migration metadata", async () => {
-    const tables = await prisma.$queryRaw<{ table_name: string }[]>`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`;
-    expect(tables.map((t) => t.table_name)).toEqual(["_prisma_migrations"]);
-  });
-});

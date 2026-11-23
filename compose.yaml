@@ -24,6 +24,13 @@ services:
     environment:
       PORT: "3000"
       DATABASE_URL: postgresql://${POSTGRES_USER:-ticketing}:${POSTGRES_PASSWORD:-ticketing-local}@db:5432/${POSTGRES_DB:-ticketing}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:${APP_PORT:-8080}}
+      SMTP_HOST: ${SMTP_HOST:-relay1.dataart.com}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-Ticket Tracker <no-reply@ticket-tracker.local>}
     depends_on:
       db:
         condition: service_healthy
@@ -42,6 +49,14 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+  # --- Local mail catcher: COMPOSE_PROFILES=mail + SMTP_HOST=mailpit, SMTP_PORT=1025 ---
+  # Web UI: http://localhost:8025
+  mailpit:
+    profiles: ["mail"]
+    image: axllent/mailpit:v1.21.8
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
 
   # --- Tests: docker compose --profile test run --rm backend-test ---
   db-test:

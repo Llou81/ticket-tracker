@@ -5,7 +5,11 @@
   --muted: #667085;
   --border: #dde1e6;
   --accent: #2f6fed;
+  --accent-hover: #2459c7;
   --danger: #c4320a;
+  --danger-bg: #fef3f2;
+  --success: #067647;
+  --success-bg: #ecfdf3;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -17,6 +21,15 @@
 
 body {
   margin: 0;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 16px;
+}
+
+a {
+  color: var(--accent);
 }
 
 .header {
@@ -34,8 +47,117 @@ body {
   text-decoration: none;
 }
 
+.nav {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}
+
 .main {
   padding: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.card.narrow {
+  max-width: 420px;
+  margin: 40px auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.field span {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+button {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button.secondary {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+button.link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  text-decoration: underline;
+}
+
+button.link:hover:not(:disabled) {
+  background: none;
+}
+
+.resend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.resend .field {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.notice {
+  padding: 10px 12px;
+  border-radius: 6px;
+}
+
+.notice.error {
+  background: var(--danger-bg);
+}
+
+.notice.success {
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .muted {
