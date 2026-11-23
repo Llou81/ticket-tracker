@@ -12,11 +12,14 @@ function nameTaken(name: string) {
   return new HttpError(409, `A team named "${name}" already exists.`, "team_name_taken");
 }
 
-export async function listTeams(): Promise<Team[]> {
-  // Case-insensitive alphabetical order.
-  return prisma.$queryRaw<Team[]>`
-    SELECT id, name, created_at AS "createdAt", modified_at AS "modifiedAt"
-    FROM teams ORDER BY lower(name), name`;
+export type TeamWithCounts = Team & { epicCount: number };
+
+/** Teams in case-insensitive alphabetical order, with usage counts so the UI can disable Delete. */
+export async function listTeams(): Promise<TeamWithCounts[]> {
+  return prisma.$queryRaw<TeamWithCounts[]>`
+    SELECT t.id, t.name, t.created_at AS "createdAt", t.modified_at AS "modifiedAt",
+           (SELECT count(*)::int FROM epics e WHERE e.team_id = t.id) AS "epicCount"
+    FROM teams t ORDER BY lower(t.name), t.name`;
 }
 
 export async function getTeam(id: string): Promise<Team> {
@@ -47,9 +50,21 @@ export async function renameTeam(id: string, name: string): Promise<Team> {
   }
 }
 
+/** Refuses (409) while the team has epics. RESTRICT foreign keys back this up against races. */
 export async function deleteTeam(id: string): Promise<void> {
-  // Teams with epics or tickets are protected by RESTRICT foreign keys (added with those tables);
-  // the error handler maps that violation to 409.
+  const team = await getTeam(id);
+  const epics = await prisma.epic.count({ where: { teamId: id } });
+  if (epics > 0) {
+    throw new HttpError(
+      409,
+      `Team "${team.name}" cannot be deleted because it has ${plural(epics, "epic")}. Delete or empty it first.`,
+      "team_in_use",
+    );
+  }
   const { count } = await prisma.team.deleteMany({ where: { id } });
   if (count === 0) throw new HttpError(404, NOT_FOUND, "not_found");
+}
+
+function plural(n: number, word: string) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }

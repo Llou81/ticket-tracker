@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { PublicOnly, RequireAuth } from "./components/RouteGuards";
 import { CheckEmailPage } from "./pages/CheckEmailPage";
+import { EpicsPage } from "./pages/EpicsPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignUpPage } from "./pages/SignUpPage";
@@ -21,6 +22,7 @@ export function App() {
         {/* Authenticated */}
         <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
         <Route path="/teams" element={<RequireAuth><TeamsPage /></RequireAuth>} />
+        <Route path="/epics" element={<RequireAuth><EpicsPage /></RequireAuth>} />
         <Route path="*" element={<RequireAuth><p>Page not found.</p></RequireAuth>} />
       </Routes>
     </Layout>

@@ -29,7 +29,27 @@ model Team {
   /// Set by the application only when the name actually changes.
   modifiedAt DateTime @default(now()) @map("modified_at") @db.Timestamptz(3)
 
+  epics Epic[]
+
   @@map("teams")
+}
+
+model Epic {
+  id          String   @id @default(uuid()) @db.Uuid
+  /// Fixed at creation; epics never move between teams.
+  teamId      String   @map("team_id") @db.Uuid
+  /// Trimmed, non-empty (CHECK in migration).
+  title       String
+  /// Trimmed; empty is stored as NULL.
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Set by the application only when title or description actually change.
+  modifiedAt  DateTime @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Restrict)
+
+  @@index([teamId])
+  @@map("epics")
 }
 
 model Session {

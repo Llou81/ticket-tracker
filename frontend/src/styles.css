@@ -240,7 +240,7 @@ button.link:hover:not(:disabled) {
   white-space: nowrap;
 }
 
-.table .actions button + button {
+.table .actions > * + * {
   margin-left: 6px;
 }
 
@@ -278,6 +278,40 @@ button.danger-text {
   padding: 24px;
   max-width: 440px;
   width: calc(100% - 32px);
+}
+
+.dialog.wide {
+  max-width: 560px;
+}
+
+.dialog textarea {
+  resize: vertical;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.clamp {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 .dialog::backdrop {

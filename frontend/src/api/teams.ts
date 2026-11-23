@@ -7,9 +7,13 @@ export interface Team {
   modifiedAt: string;
 }
 
+export interface TeamListItem extends Team {
+  epicCount: number;
+}
+
 export const TEAMS_KEY = ["teams"] as const;
 
-export const listTeams = () => api<Team[]>("/teams");
+export const listTeams = () => api<TeamListItem[]>("/teams");
 
 export const createTeam = (name: string) => post<Team>("/teams", { name });
 

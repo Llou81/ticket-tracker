@@ -8,14 +8,24 @@ export class HttpError extends Error {
     public status: number,
     message: string,
     public code?: string,
+    public fields?: Record<string, string>,
   ) {
     super(message);
   }
 }
 
+/** 400 for a single invalid field, in the same shape as schema validation errors. */
+export function fieldError(field: string, message: string) {
+  return new HttpError(400, "Please correct the highlighted fields.", "validation_failed", { [field]: message });
+}
+
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message, ...(err.code && { code: err.code }) });
+    res.status(err.status).json({
+      error: err.message,
+      ...(err.code && { code: err.code }),
+      ...(err.fields && { fields: err.fields }),
+    });
     return;
   }
   if (err instanceof ZodError) {

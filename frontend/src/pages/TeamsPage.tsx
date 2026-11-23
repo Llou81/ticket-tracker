@@ -1,9 +1,22 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
-import { createTeam, deleteTeam, listTeams, renameTeam, TEAMS_KEY, type Team } from "../api/teams";
+import { Link } from "react-router-dom";
+import {
+  createTeam,
+  deleteTeam,
+  listTeams,
+  renameTeam,
+  TEAMS_KEY,
+  type Team,
+  type TeamListItem,
+} from "../api/teams";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatDateTime } from "../format";
+
+const inUse = (team: TeamListItem) => team.epicCount > 0;
+const inUseReason = (team: TeamListItem) =>
+  `Cannot delete: this team has ${team.epicCount} epic${team.epicCount === 1 ? "" : "s"}.`;
 
 const fieldError = (err: unknown) =>
   err instanceof ApiError ? (err.fields?.name ?? err.message) : err instanceof Error ? err.message : null;
@@ -52,6 +65,7 @@ export function TeamsPage() {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Epics</th>
               <th>Created</th>
               <th>Modified</th>
               <th aria-label="Actions" />
@@ -74,22 +88,29 @@ export function TeamsPage() {
               ) : (
                 <tr key={team.id}>
                   <td>{team.name}</td>
+                  <td>
+                    <Link to={`/epics?team=${team.id}`}>{team.epicCount}</Link>
+                  </td>
                   <td className="muted">{formatDateTime(team.createdAt)}</td>
                   <td className="muted">{formatDateTime(team.modifiedAt)}</td>
                   <td className="actions">
                     <button type="button" className="secondary small" onClick={() => setEditingId(team.id)}>
                       Rename
                     </button>
-                    <button
-                      type="button"
-                      className="secondary small danger-text"
-                      onClick={() => {
-                        remove.reset();
-                        setDeleting(team);
-                      }}
-                    >
-                      Delete
-                    </button>
+                    <span title={inUse(team) ? inUseReason(team) : undefined}>
+                      <button
+                        type="button"
+                        className="secondary small danger-text"
+                        disabled={inUse(team)}
+                        aria-label={inUse(team) ? `Delete (${inUseReason(team)})` : undefined}
+                        onClick={() => {
+                          remove.reset();
+                          setDeleting(team);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </span>
                   </td>
                 </tr>
               ),
@@ -169,7 +190,7 @@ function RenameRow({ team, onDone }: { team: Team; onDone: (renamed: Team | null
 
   return (
     <tr>
-      <td colSpan={4}>
+      <td colSpan={5}>
         <form className="inline-form" onSubmit={submit}>
           <label className="field grow">
             <span className="sr-only">Team name</span>

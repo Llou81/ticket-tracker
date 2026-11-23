@@ -17,6 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <NavLink to="/" end>
               Board
             </NavLink>
+            <NavLink to="/epics">Epics</NavLink>
             <NavLink to="/teams">Teams</NavLink>
           </nav>
         )}
