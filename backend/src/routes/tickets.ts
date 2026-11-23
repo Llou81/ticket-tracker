@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { currentUser } from "../middleware/auth";
+import { addComment, listComments } from "../services/comments";
 import { createTicket, deleteTicket, getTicket, listTickets, updateTicket } from "../services/tickets";
 import { parseId, reference, requiredText } from "../util/validation";
 
@@ -74,4 +75,20 @@ ticketsRouter.patch("/:id", async (req, res) => {
 ticketsRouter.delete("/:id", async (req, res) => {
   await deleteTicket(ticketId(req.params.id));
   res.status(204).end();
+});
+
+// Comments are immutable: list and add only.
+const commentBody = z
+  .string({ required_error: "Comment is required.", invalid_type_error: "Comment must be text." })
+  .max(50_000, "Comment must be at most 50000 characters.")
+  .refine((s) => s.trim() !== "", "Comment must not be empty.");
+
+ticketsRouter.get("/:id/comments", async (req, res) => {
+  res.json(await listComments(ticketId(req.params.id)));
+});
+
+ticketsRouter.post("/:id/comments", async (req, res) => {
+  const id = ticketId(req.params.id);
+  const { body } = z.object({ body: commentBody }).parse(req.body);
+  res.status(201).json(await addComment(id, currentUser(res).id, body));
 });

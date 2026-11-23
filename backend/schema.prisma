@@ -18,6 +18,7 @@ model User {
   verificationTokens EmailVerificationToken[]
   sessions           Session[]
   tickets            Ticket[]
+  comments           Comment[]
 
   @@map("users")
 }
@@ -92,10 +93,28 @@ model Ticket {
   team      Team  @relation(fields: [teamId], references: [id], onDelete: Restrict)
   epic      Epic? @relation(fields: [epicId], references: [id], onDelete: Restrict)
   createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  comments  Comment[]
 
   @@index([teamId, modifiedAt(sort: Desc)])
   @@index([epicId])
   @@map("tickets")
+}
+
+/// Immutable once created (no update/delete in the mandatory scope).
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticketId  String   @map("ticket_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  /// Stored as entered; must contain non-whitespace (CHECK in migration).
+  body      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Deleting a ticket deletes its comments.
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+  @@map("comments")
 }
 
 model Session {

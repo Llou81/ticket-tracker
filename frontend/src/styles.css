@@ -426,6 +426,59 @@ a.button:hover {
   color: #5925dc;
 }
 
+/* ---------- Comments ---------- */
+
+.comments {
+  margin-top: 16px;
+}
+
+.comments h2 {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.comment {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.comment:first-child {
+  padding-top: 0;
+}
+
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.comment-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.comment-form .field {
+  margin-bottom: 8px;
+}
+
+.comment-form .form-actions {
+  align-items: center;
+}
+
+.comment-form .form-actions small {
+  margin-right: auto;
+}
+
 /* ---------- Kanban board ---------- */
 
 .board-page .page-header,

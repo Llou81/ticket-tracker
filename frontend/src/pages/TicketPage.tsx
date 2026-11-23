@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { listTeams, TEAMS_KEY } from "../api/teams";
 import { deleteTicket, getTicket, ticketKey, TICKETS_KEY, updateTicket, type Ticket } from "../api/tickets";
+import { Comments } from "../components/Comments";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TicketForm } from "../components/TicketForm";
 import { formatDateTime } from "../format";
@@ -98,6 +99,8 @@ export function TicketPage() {
           />
         )}
       </div>
+
+      {!editing && <Comments ticketId={t.id} />}
 
       {confirmDelete && (
         <ConfirmDialog
