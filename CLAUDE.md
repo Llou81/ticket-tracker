@@ -26,6 +26,10 @@ SSO/OAuth, attachments, notifications, real-time updates, custom workflows.
                      and save it as backend/migrations/<timestamp>_<name>/migration.sql
 - Mail catcher:      COMPOSE_PROFILES=mail, SMTP_HOST=mailpit, SMTP_PORT=1025 in .env → UI at http://localhost:8025
 - Stop test DB:      docker compose --profile test down
+- Browser tests:     docker compose -p ticket-tracker-e2e -f compose.yaml -f compose.e2e.yaml run --rm --build e2e
+                     then the same with `down -v`. Isolated stack (tmpfs DB, Mailpit, no host ports).
+                     Keep @playwright/test in e2e/package.json pinned to the version in e2e/Dockerfile's image tag.
+                     Board selectors rely on section.column[aria-label=<state label>] and .card-ticket.
 - Lockfiles (no host Node): docker run --rm -v "<abs path>/backend:/app" -w /app node:24-bookworm-slim npm install --package-lock-only
 Nothing may be required on the host except Docker + Compose.
 

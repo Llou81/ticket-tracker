@@ -1,0 +1,39 @@
+# Browser tests (Playwright/Chromium) against an isolated, throwaway copy of the stack.
+# Use with a separate project name so it never touches the dev stack or its data:
+#
+#   docker compose -p ticket-tracker-e2e -f compose.yaml -f compose.e2e.yaml run --rm --build e2e
+#   docker compose -p ticket-tracker-e2e -f compose.yaml -f compose.e2e.yaml down -v
+services:
+  db:
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  backend:
+    environment:
+      APP_BASE_URL: http://frontend
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+
+  frontend:
+    ports: !reset []
+
+  mailpit:
+    profiles: !reset []
+    ports: !reset []
+
+  e2e:
+    build:
+      context: ./e2e
+    environment:
+      BASE_URL: http://frontend
+      MAILPIT_URL: http://mailpit:8025
+    ipc: host
+    depends_on:
+      frontend:
+        condition: service_started
+      mailpit:
+        condition: service_started

@@ -94,6 +94,20 @@ stubbed. Coverage includes:
 - **End-to-end API flow** (`tests/e2e-flow.test.ts`): sign up → verify → log in → team → epic → tickets →
   move → reload → comment → log out.
 
+### Browser tests
+
+Playwright drives real Chromium (inside Docker) against an isolated, throwaway copy of the stack — fresh in-memory
+database, mail captured by Mailpit, no host ports — so it never touches your running app or its data:
+
+```sh
+docker compose -p ticket-tracker-e2e -f compose.yaml -f compose.e2e.yaml run --rm --build e2e
+docker compose -p ticket-tracker-e2e -f compose.yaml -f compose.e2e.yaml down -v
+```
+
+`e2e/tests/board.spec.ts` covers: sign-up → verification email → verify → log in (through the UI), then the board:
+pointer drag persisted across reload, keyboard drag, Escape/no-op drops, failed-move rollback with an error,
+opening a card, and the type/title filters. The first run pulls the Playwright image (~1.5 GB).
+
 ## Architecture
 
 ```
@@ -104,6 +118,8 @@ browser ──► nginx (frontend container, :8080)
 
 ```
 compose.yaml          db, backend, frontend (+ mailpit and test profiles)
+compose.e2e.yaml      overrides for the isolated browser-test stack
+e2e/                  Playwright browser tests
 backend/
   schema.prisma       data model
   migrations/         SQL migrations, applied on startup (some constraints/triggers hand-written)
