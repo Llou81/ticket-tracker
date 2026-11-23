@@ -1,0 +1,2 @@
+-- Initial empty migration: establishes migration tracking.
+-- Application tables are added by later migrations. No seed data, ever.

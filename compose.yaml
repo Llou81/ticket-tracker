@@ -1,0 +1,74 @@
+name: ticket-tracker
+
+x-db-env: &db-env
+  POSTGRES_DB: ${POSTGRES_DB:-ticketing}
+  POSTGRES_USER: ${POSTGRES_USER:-ticketing}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticketing-local}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment: *db-env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketing}:${POSTGRES_PASSWORD:-ticketing-local}@db:5432/${POSTGRES_DB:-ticketing}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # --- Tests: docker compose --profile test run --rm backend-test ---
+  db-test:
+    profiles: ["test"]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ticketing_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d ticketing_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  backend-test:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      target: test
+    environment:
+      DATABASE_URL: postgresql://test:test@db-test:5432/ticketing_test
+    depends_on:
+      db-test:
+        condition: service_healthy
+
+volumes:
+  db-data:
