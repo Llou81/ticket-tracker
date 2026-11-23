@@ -24,6 +24,8 @@ const env = schema.parse(process.env);
 export const config = {
   port: env.PORT,
   appBaseUrl: env.APP_BASE_URL.replace(/\/+$/, ""),
+  /** Secure cookies only work over HTTPS; local http://localhost setups need them off. */
+  cookieSecure: env.APP_BASE_URL.startsWith("https://"),
   smtp: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,

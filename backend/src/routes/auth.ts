@@ -1,6 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
-import { resendByEmail, resendByToken, signUp, verifyEmail } from "../services/auth";
+import {
+  clearSessionCookie,
+  currentUser,
+  readSessionToken,
+  requireAuth,
+  setSessionCookie,
+} from "../middleware/auth";
+import { logIn, resendByEmail, resendByToken, signUp, verifyEmail } from "../services/auth";
+import { createSession, deleteSession } from "../services/sessions";
 
 export const authRouter = Router();
 
@@ -40,4 +48,28 @@ authRouter.post("/resend-verification", async (req, res) => {
   res.status(202).json({
     message: "If the account exists and is not yet verified, a new verification email has been sent.",
   });
+});
+
+authRouter.post("/login", async (req, res) => {
+  const body = z
+    .object({
+      email,
+      password: z.string({ required_error: "Password is required." }).min(1, "Password is required.").max(1024),
+    })
+    .parse(req.body);
+  const user = await logIn(body.email, body.password);
+  const session = await createSession(user.id);
+  setSessionCookie(res, session.token, session.expiresAt);
+  res.json({ user: { id: user.id, email: user.email } });
+});
+
+authRouter.post("/logout", async (req, res) => {
+  const sessionToken = readSessionToken(req);
+  if (sessionToken) await deleteSession(sessionToken);
+  clearSessionCookie(res);
+  res.status(204).end();
+});
+
+authRouter.get("/me", requireAuth, (_req, res) => {
+  res.json({ user: currentUser(res) });
 });

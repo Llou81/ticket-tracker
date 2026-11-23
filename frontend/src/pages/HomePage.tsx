@@ -1,17 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api/client";
+import { useCurrentUser } from "../auth";
 
+// Becomes the Kanban board in slice 6.
 export function HomePage() {
-  const health = useQuery({
-    queryKey: ["health"],
-    queryFn: () => api<{ status: string; database: string }>("/health"),
-  });
-
-  if (health.isPending) return <p className="muted">Checking API…</p>;
-  if (health.isError) return <p className="error">API unavailable: {health.error.message}</p>;
+  const { data: user } = useCurrentUser();
   return (
-    <p>
-      API: <strong>{health.data.status}</strong>, database: <strong>{health.data.database}</strong>
-    </p>
+    <div className="card">
+      <h1>Welcome</h1>
+      <p>
+        You are logged in as <strong>{user?.email}</strong>.
+      </p>
+    </div>
   );
 }

@@ -16,9 +16,9 @@ describe("health", () => {
     expect(res.body).toEqual({ status: "ok", database: "ok" });
   });
 
-  it("returns JSON 404 for unknown API routes", async () => {
+  it("requires authentication for non-public API routes", async () => {
     const res = await request(app).get("/api/does-not-exist");
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "Not found" });
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe("unauthenticated");
   });
 });

@@ -1,15 +1,30 @@
-import { createHash, randomBytes } from "node:crypto";
 import * as argon2 from "argon2";
 import { Prisma, type User } from "@prisma/client";
 import { config } from "../config";
 import { prisma } from "../db";
 import { HttpError } from "../errors";
+import { hashToken, randomToken } from "../util/tokens";
 import { mailer } from "./mailer";
 
 export const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
-export function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
+// Verified against when the email is unknown, so response time doesn't reveal which accounts exist.
+let dummyHash: Promise<string> | undefined;
+const getDummyHash = () => (dummyHash ??= argon2.hash(randomToken(), { type: argon2.argon2id }));
+
+/** Checks credentials. Only reveals "not verified" after a correct password. Email must already be normalized. */
+export async function logIn(email: string, password: string): Promise<User> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  const valid = user
+    ? await argon2.verify(user.passwordHash, password)
+    : (await argon2.verify(await getDummyHash(), password), false);
+  if (!user || !valid) {
+    throw new HttpError(401, "Invalid email or password.", "invalid_credentials");
+  }
+  if (!user.emailVerifiedAt) {
+    throw new HttpError(403, "Please verify your email address before logging in.", "email_not_verified");
+  }
+  return user;
 }
 
 /** Creates an unverified account and emails a verification link. Email must already be normalized. */
@@ -91,7 +106,7 @@ async function issueOrFail(user: User) {
 
 /** Invalidates earlier unused tokens, stores a new one, and emails it. Returns whether the email was sent. */
 async function issueVerificationToken(user: User): Promise<boolean> {
-  const token = randomBytes(32).toString("base64url");
+  const token = randomToken();
   const now = new Date();
   await prisma.$transaction([
     prisma.emailVerificationToken.updateMany({

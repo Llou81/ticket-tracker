@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { PublicOnly, RequireAuth } from "./components/RouteGuards";
 import { CheckEmailPage } from "./pages/CheckEmailPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
@@ -10,12 +11,15 @@ export function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        {/* Public */}
+        <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+        <Route path="/signup" element={<PublicOnly><SignUpPage /></PublicOnly>} />
         <Route path="/check-email" element={<CheckEmailPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<p>Page not found.</p>} />
+
+        {/* Authenticated */}
+        <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+        <Route path="*" element={<RequireAuth><p>Page not found.</p></RequireAuth>} />
       </Routes>
     </Layout>
   );

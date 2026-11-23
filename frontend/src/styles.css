@@ -146,6 +146,47 @@ button.link:hover:not(:disabled) {
   margin-bottom: 0;
 }
 
+.section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.1);
+  padding: 4px;
+  z-index: 10;
+}
+
+button.menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  color: var(--text);
+}
+
+button.menu-item:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+.menu-error {
+  margin: 4px 8px;
+  font-size: 0.85rem;
+}
+
 .notice {
   padding: 10px 12px;
   border-radius: 6px;

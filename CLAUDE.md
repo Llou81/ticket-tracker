@@ -49,6 +49,11 @@ Nothing may be required on the host except Docker + Compose.
   issuing a new one invalidates older unused ones. Success -> login screen.
 - Only sign-up, login, verify, resend (and static files / health) are public.
 - Session IDs / bearer tokens never in URLs (the verification link is the only exception).
+- Implementation: httpOnly SameSite=Lax cookie `sid`, stored as SHA-256 in `sessions`, 7-day sliding expiry.
+  backend/src/app.ts mounts public routers first, then `requireAuth` on /api — mount every new business
+  router AFTER it. `sameOrigin` middleware rejects cross-origin writes (nginx forwards Host with port).
+- Frontend: `useCurrentUser()` (src/auth.ts) is the session source; wrap app routes in `<RequireAuth>`.
+  Any 401 from the API clears the cached user, which redirects to /login.
 
 ## Config & secrets
 - All config via env vars; keep .env.example complete and README in sync.

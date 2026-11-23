@@ -1,3 +1,4 @@
+import * as argon2 from "argon2";
 import { vi } from "vitest";
 import { prisma } from "../src/db";
 import { mailer, type MailMessage } from "../src/services/mailer";
@@ -19,6 +20,17 @@ export function captureMail() {
     outbox.push(message);
   });
   return { outbox, spy };
+}
+
+/** Inserts a user directly (bypassing sign-up email). */
+export async function createUser(email: string, password: string, { verified = true } = {}) {
+  return prisma.user.create({
+    data: {
+      email,
+      passwordHash: await argon2.hash(password, { type: argon2.argon2id }),
+      emailVerifiedAt: verified ? new Date() : null,
+    },
+  });
 }
 
 /** Pulls the raw verification token out of an email's link. */
