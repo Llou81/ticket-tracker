@@ -8,6 +8,7 @@ export interface Epic {
   description: string | null;
   createdAt: string;
   modifiedAt: string;
+  ticketCount: number;
 }
 
 export const EPICS_KEY = ["epics"] as const;

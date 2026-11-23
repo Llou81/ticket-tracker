@@ -6,11 +6,13 @@ import { authRouter } from "./routes/auth";
 import { epicsRouter } from "./routes/epics";
 import { healthRouter } from "./routes/health";
 import { teamsRouter } from "./routes/teams";
+import { ticketsRouter } from "./routes/tickets";
 
 export function createApp() {
   const app = express();
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "100kb" }));
+  // Ticket bodies can be long Markdown documents.
+  app.use(express.json({ limit: "1mb" }));
   app.use("/api", sameOrigin);
 
   // Public routes: health, sign-up, login/logout, verification, resend.
@@ -22,6 +24,7 @@ export function createApp() {
   app.use("/api", requireAuth);
   app.use("/api/teams", teamsRouter);
   app.use("/api/epics", epicsRouter);
+  app.use("/api/tickets", ticketsRouter);
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });

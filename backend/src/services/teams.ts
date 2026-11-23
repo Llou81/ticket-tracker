@@ -12,13 +12,14 @@ function nameTaken(name: string) {
   return new HttpError(409, `A team named "${name}" already exists.`, "team_name_taken");
 }
 
-export type TeamWithCounts = Team & { epicCount: number };
+export type TeamWithCounts = Team & { epicCount: number; ticketCount: number };
 
 /** Teams in case-insensitive alphabetical order, with usage counts so the UI can disable Delete. */
 export async function listTeams(): Promise<TeamWithCounts[]> {
   return prisma.$queryRaw<TeamWithCounts[]>`
     SELECT t.id, t.name, t.created_at AS "createdAt", t.modified_at AS "modifiedAt",
-           (SELECT count(*)::int FROM epics e WHERE e.team_id = t.id) AS "epicCount"
+           (SELECT count(*)::int FROM epics e WHERE e.team_id = t.id) AS "epicCount",
+           (SELECT count(*)::int FROM tickets k WHERE k.team_id = t.id) AS "ticketCount"
     FROM teams t ORDER BY lower(t.name), t.name`;
 }
 
@@ -50,14 +51,18 @@ export async function renameTeam(id: string, name: string): Promise<Team> {
   }
 }
 
-/** Refuses (409) while the team has epics. RESTRICT foreign keys back this up against races. */
+/** Refuses (409) while the team has epics or tickets. RESTRICT foreign keys back this up against races. */
 export async function deleteTeam(id: string): Promise<void> {
   const team = await getTeam(id);
-  const epics = await prisma.epic.count({ where: { teamId: id } });
-  if (epics > 0) {
+  const [epics, tickets] = await Promise.all([
+    prisma.epic.count({ where: { teamId: id } }),
+    prisma.ticket.count({ where: { teamId: id } }),
+  ]);
+  if (epics > 0 || tickets > 0) {
+    const parts = [epics > 0 && plural(epics, "epic"), tickets > 0 && plural(tickets, "ticket")].filter(Boolean);
     throw new HttpError(
       409,
-      `Team "${team.name}" cannot be deleted because it has ${plural(epics, "epic")}. Delete or empty it first.`,
+      `Team "${team.name}" cannot be deleted because it has ${parts.join(" and ")}. Delete or move them first.`,
       "team_in_use",
     );
   }

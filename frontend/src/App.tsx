@@ -5,6 +5,8 @@ import { CheckEmailPage } from "./pages/CheckEmailPage";
 import { EpicsPage } from "./pages/EpicsPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
+import { NewTicketPage } from "./pages/NewTicketPage";
+import { TicketPage } from "./pages/TicketPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
@@ -23,6 +25,8 @@ export function App() {
         <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
         <Route path="/teams" element={<RequireAuth><TeamsPage /></RequireAuth>} />
         <Route path="/epics" element={<RequireAuth><EpicsPage /></RequireAuth>} />
+        <Route path="/tickets/new" element={<RequireAuth><NewTicketPage /></RequireAuth>} />
+        <Route path="/tickets/:id" element={<RequireAuth><TicketPage /></RequireAuth>} />
         <Route path="*" element={<RequireAuth><p>Page not found.</p></RequireAuth>} />
       </Routes>
     </Layout>

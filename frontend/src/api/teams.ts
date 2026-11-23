@@ -9,6 +9,7 @@ export interface Team {
 
 export interface TeamListItem extends Team {
   epicCount: number;
+  ticketCount: number;
 }
 
 export const TEAMS_KEY = ["teams"] as const;

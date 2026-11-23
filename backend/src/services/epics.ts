@@ -11,9 +11,11 @@ export interface EpicDto {
   description: string | null;
   createdAt: Date;
   modifiedAt: Date;
+  /** Tickets referencing this epic; the UI disables Delete while > 0. */
+  ticketCount: number;
 }
 
-const include = { team: { select: { name: true } } } as const;
+const include = { team: { select: { name: true } }, _count: { select: { tickets: true } } } as const;
 
 function toDto(epic: {
   id: string;
@@ -23,9 +25,10 @@ function toDto(epic: {
   createdAt: Date;
   modifiedAt: Date;
   team: { name: string };
+  _count: { tickets: number };
 }): EpicDto {
-  const { team, ...rest } = epic;
-  return { ...rest, teamName: team.name };
+  const { team, _count, ...rest } = epic;
+  return { ...rest, teamName: team.name, ticketCount: _count.tickets };
 }
 
 /** All epics (optionally of one team), ordered by title ignoring case. */
@@ -73,8 +76,18 @@ export async function updateEpic(
   return toDto(updated);
 }
 
+/** Refuses (409) while tickets reference the epic. A RESTRICT foreign key backs this up against races. */
 export async function deleteEpic(id: string): Promise<void> {
-  // Epics referenced by tickets are protected by a RESTRICT foreign key (added with tickets).
+  const epic = await getEpic(id);
+  if (epic.ticketCount > 0) {
+    const n = epic.ticketCount;
+    throw new HttpError(
+      409,
+      `Epic "${epic.title}" cannot be deleted because ${n} ticket${n === 1 ? " references" : "s reference"} it. ` +
+        `Remove the epic from ${n === 1 ? "that ticket" : "those tickets"} first.`,
+      "epic_in_use",
+    );
+  }
   const { count } = await prisma.epic.deleteMany({ where: { id } });
   if (count === 0) throw new HttpError(404, NOT_FOUND, "not_found");
 }

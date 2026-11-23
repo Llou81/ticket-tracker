@@ -8,7 +8,10 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
 import { formatDateTime } from "../format";
 
-type Editing = { mode: "create" } | { mode: "edit"; epic: Epic };
+const inUseReason = (epic: Epic) =>
+  `Cannot delete: ${epic.ticketCount} ticket${epic.ticketCount === 1 ? " references" : "s reference"} this epic.`;
+
+type Editing ={ mode: "create" } | { mode: "edit"; epic: Epic };
 
 export function EpicsPage() {
   const queryClient = useQueryClient();
@@ -90,6 +93,7 @@ export function EpicsPage() {
               <th>Title</th>
               <th>Team</th>
               <th>Description</th>
+              <th>Tickets</th>
               <th>Modified</th>
               <th aria-label="Actions" />
             </tr>
@@ -102,21 +106,26 @@ export function EpicsPage() {
                 <td className="muted clamp" title={epic.description ?? undefined}>
                   {epic.description ?? "—"}
                 </td>
+                <td>{epic.ticketCount}</td>
                 <td className="muted nowrap">{formatDateTime(epic.modifiedAt)}</td>
                 <td className="actions">
                   <button type="button" className="secondary small" onClick={() => setEditing({ mode: "edit", epic })}>
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    className="secondary small danger-text"
-                    onClick={() => {
-                      remove.reset();
-                      setDeleting(epic);
-                    }}
-                  >
-                    Delete
-                  </button>
+                  <span title={epic.ticketCount > 0 ? inUseReason(epic) : undefined}>
+                    <button
+                      type="button"
+                      className="secondary small danger-text"
+                      disabled={epic.ticketCount > 0}
+                      aria-label={epic.ticketCount > 0 ? `Delete (${inUseReason(epic)})` : undefined}
+                      onClick={() => {
+                        remove.reset();
+                        setDeleting(epic);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </span>
                 </td>
               </tr>
             ))}

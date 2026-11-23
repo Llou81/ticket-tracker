@@ -14,9 +14,12 @@ import {
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatDateTime } from "../format";
 
-const inUse = (team: TeamListItem) => team.epicCount > 0;
-const inUseReason = (team: TeamListItem) =>
-  `Cannot delete: this team has ${team.epicCount} epic${team.epicCount === 1 ? "" : "s"}.`;
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const inUse = (team: TeamListItem) => team.epicCount > 0 || team.ticketCount > 0;
+const inUseReason = (team: TeamListItem) => {
+  const parts = [team.epicCount > 0 && plural(team.epicCount, "epic"), team.ticketCount > 0 && plural(team.ticketCount, "ticket")];
+  return `Cannot delete: this team has ${parts.filter(Boolean).join(" and ")}.`;
+};
 
 const fieldError = (err: unknown) =>
   err instanceof ApiError ? (err.fields?.name ?? err.message) : err instanceof Error ? err.message : null;
@@ -66,6 +69,7 @@ export function TeamsPage() {
             <tr>
               <th>Name</th>
               <th>Epics</th>
+              <th>Tickets</th>
               <th>Created</th>
               <th>Modified</th>
               <th aria-label="Actions" />
@@ -90,6 +94,9 @@ export function TeamsPage() {
                   <td>{team.name}</td>
                   <td>
                     <Link to={`/epics?team=${team.id}`}>{team.epicCount}</Link>
+                  </td>
+                  <td>
+                    <Link to={`/?team=${team.id}`}>{team.ticketCount}</Link>
                   </td>
                   <td className="muted">{formatDateTime(team.createdAt)}</td>
                   <td className="muted">{formatDateTime(team.modifiedAt)}</td>
@@ -190,7 +197,7 @@ function RenameRow({ team, onDone }: { team: Team; onDone: (renamed: Team | null
 
   return (
     <tr>
-      <td colSpan={5}>
+      <td colSpan={6}>
         <form className="inline-form" onSubmit={submit}>
           <label className="field grow">
             <span className="sr-only">Team name</span>

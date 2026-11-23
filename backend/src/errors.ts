@@ -48,6 +48,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
       return;
     }
   }
+  if (err?.type === "entity.too.large") {
+    res.status(413).json({ error: "Request body is too large.", code: "payload_too_large" });
+    return;
+  }
   if (err?.type === "entity.parse.failed") {
     res.status(400).json({ error: "Request body is not valid JSON.", code: "invalid_json" });
     return;

@@ -17,6 +17,7 @@ model User {
 
   verificationTokens EmailVerificationToken[]
   sessions           Session[]
+  tickets            Ticket[]
 
   @@map("users")
 }
@@ -29,7 +30,8 @@ model Team {
   /// Set by the application only when the name actually changes.
   modifiedAt DateTime @default(now()) @map("modified_at") @db.Timestamptz(3)
 
-  epics Epic[]
+  epics   Epic[]
+  tickets Ticket[]
 
   @@map("teams")
 }
@@ -46,10 +48,54 @@ model Epic {
   /// Set by the application only when title or description actually change.
   modifiedAt  DateTime @default(now()) @map("modified_at") @db.Timestamptz(3)
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  team    Team     @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  tickets Ticket[]
 
   @@index([teamId])
   @@map("epics")
+}
+
+enum TicketType {
+  bug
+  feature
+  fix
+
+  @@map("ticket_type")
+}
+
+enum TicketState {
+  new
+  ready_for_implementation
+  in_progress
+  ready_for_acceptance
+  done
+
+  @@map("ticket_state")
+}
+
+model Ticket {
+  id          String      @id @default(uuid()) @db.Uuid
+  teamId      String      @map("team_id") @db.Uuid
+  /// Null or an epic of the same team (service check + trigger "tickets_epic_same_team").
+  epicId      String?     @map("epic_id") @db.Uuid
+  type        TicketType
+  state       TicketState @default(new)
+  /// Trimmed, non-empty (CHECK in migration).
+  title       String
+  /// Stored as entered (Markdown indentation matters); must contain non-whitespace (CHECK).
+  body        String
+  createdById String      @map("created_by") @db.Uuid
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Set by the application only on real field/state changes. Comments never touch it.
+  modifiedAt  DateTime    @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  team      Team  @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  epic      Epic? @relation(fields: [epicId], references: [id], onDelete: Restrict)
+  createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([teamId, modifiedAt(sort: Desc)])
+  @@index([epicId])
+  @@map("tickets")
 }
 
 model Session {
