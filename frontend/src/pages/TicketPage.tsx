@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { listTeams, TEAMS_KEY } from "../api/teams";
 import { deleteTicket, getTicket, ticketKey, TICKETS_KEY, updateTicket, type Ticket } from "../api/tickets";
 import { Comments } from "../components/Comments";
@@ -8,15 +8,15 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TicketForm } from "../components/TicketForm";
 import { formatDateTime } from "../format";
 import { STATE_LABELS, TYPE_LABELS } from "../tickets";
+import { useFlashNotice } from "../useFlashNotice";
 
 export function TicketPage() {
   const { id = "" } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [notice, setNotice] = useState<string | null>((location.state as { notice?: string } | null)?.notice ?? null);
+  const [notice, setNotice] = useFlashNotice();
 
   const ticket = useQuery({ queryKey: ticketKey(id), queryFn: () => getTicket(id) });
   const teams = useQuery({ queryKey: TEAMS_KEY, queryFn: listTeams, enabled: editing });

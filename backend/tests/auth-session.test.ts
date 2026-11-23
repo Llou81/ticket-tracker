@@ -128,6 +128,19 @@ describe("cross-origin protection", () => {
     expect(res.body.code).toBe("bad_origin");
   });
 
+  it("handles the opaque 'Origin: null' using Sec-Fetch-Site", async () => {
+    await createUser("ivy@example.com", PASSWORD);
+    const login = (fetchSite: string) =>
+      request(app)
+        .post("/api/auth/login")
+        .set("Host", "localhost:8080")
+        .set("Origin", "null")
+        .set("Sec-Fetch-Site", fetchSite)
+        .send({ email: "ivy@example.com", password: PASSWORD });
+    expect((await login("same-origin")).status).toBe(200);
+    expect((await login("cross-site")).status).toBe(403);
+  });
+
   it("allows same-origin requests", async () => {
     await createUser("hank@example.com", PASSWORD);
     const res = await request(app)

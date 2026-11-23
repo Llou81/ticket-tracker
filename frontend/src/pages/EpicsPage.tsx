@@ -94,6 +94,7 @@ export function EpicsPage() {
               <th>Team</th>
               <th>Description</th>
               <th>Tickets</th>
+              <th>Created</th>
               <th>Modified</th>
               <th aria-label="Actions" />
             </tr>
@@ -107,6 +108,7 @@ export function EpicsPage() {
                   {epic.description ?? "—"}
                 </td>
                 <td>{epic.ticketCount}</td>
+                <td className="muted nowrap">{formatDateTime(epic.createdAt)}</td>
                 <td className="muted nowrap">{formatDateTime(epic.modifiedAt)}</td>
                 <td className="actions">
                   <button type="button" className="secondary small" onClick={() => setEditing({ mode: "edit", epic })}>
@@ -126,6 +128,7 @@ export function EpicsPage() {
                       Delete
                     </button>
                   </span>
+                  {epic.ticketCount > 0 && <small className="in-use-hint">{inUseReason(epic)}</small>}
                 </td>
               </tr>
             ))}

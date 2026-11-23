@@ -118,6 +118,7 @@ export function TeamsPage() {
                         Delete
                       </button>
                     </span>
+                    {inUse(team) && <small className="in-use-hint">{inUseReason(team)}</small>}
                   </td>
                 </tr>
               ),

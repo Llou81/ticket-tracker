@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { EPICS_KEY, listEpics } from "../api/epics";
 import { listTeams, TEAMS_KEY } from "../api/teams";
 import { listTickets, ticketKey, ticketListKey, updateTicket, type TicketSummary } from "../api/tickets";
 import { KanbanBoard } from "../components/KanbanBoard";
 import { STATE_LABELS, TICKET_STATES, TICKET_TYPES, TYPE_LABELS, type TicketState, type TicketType } from "../tickets";
+import { useFlashNotice } from "../useFlashNotice";
 import { useSelectedTeam } from "../useSelectedTeam";
 
 const ALL = "";
@@ -22,7 +23,6 @@ const emptyColumns = () =>
   Object.fromEntries(TICKET_STATES.map((s) => [s, [] as TicketSummary[]])) as Record<TicketState, TicketSummary[]>;
 
 export function BoardPage() {
-  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -37,7 +37,7 @@ export function BoardPage() {
   const [typeFilter, setTypeFilter] = useState<TicketType | typeof ALL>(ALL);
   const [epicFilter, setEpicFilter] = useState<string>(ALL);
   const [search, setSearch] = useState("");
-  const [notice, setNotice] = useState<string | null>((location.state as { notice?: string } | null)?.notice ?? null);
+  const [notice, setNotice] = useFlashNotice();
   const [moveError, setMoveError] = useState<string | null>(null);
   const [savingIds, setSavingIds] = useState<ReadonlySet<string>>(new Set());
 
@@ -161,7 +161,7 @@ export function BoardPage() {
         <label className="field inline">
           <span>Epic</span>
           <select value={epicFilter} onChange={(e) => setEpicFilter(e.target.value)} disabled={epics.isPending}>
-            <option value={ALL}>All epics</option>
+            <option value={ALL}>{epics.isPending ? "Loading…" : "All epics"}</option>
             <option value={NO_EPIC}>No epic</option>
             {epics.data?.map((e) => (
               <option key={e.id} value={e.id}>
@@ -169,6 +169,7 @@ export function BoardPage() {
               </option>
             ))}
           </select>
+          {epics.isError && <small className="error">Could not load epics.</small>}
         </label>
         <label className="field inline grow">
           <span className="sr-only">Search titles</span>

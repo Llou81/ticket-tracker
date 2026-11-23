@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="referrer" content="no-referrer" />
+    <!-- Keeps the verification token out of cross-site Referer headers. (Not "no-referrer":
+         that makes browsers send "Origin: null" on same-origin POSTs, which the API rejects.) -->
+    <meta name="referrer" content="same-origin" />
     <title>Ticket Tracker</title>
   </head>
   <body>
