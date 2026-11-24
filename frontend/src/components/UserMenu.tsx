@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { logOut, type User } from "../api/auth";
 import { CURRENT_USER_KEY } from "../auth";
+import { useDismiss } from "./useDismiss";
 
 /** Collapsed menu in the header showing the user's email; contains Log out. */
 export function UserMenu({ user }: { user: User }) {
@@ -14,26 +16,19 @@ export function UserMenu({ user }: { user: User }) {
   const logout = useMutation({
     mutationFn: logOut,
     onSuccess: () => {
-      queryClient.clear();
+      // Update the user query in place rather than clear() it: the header stays mounted and
+      // keeps observing that query object, so removing it would leave a stale signed-in header.
       queryClient.setQueryData(CURRENT_USER_KEY, null);
-      navigate("/login", { replace: true, state: { notice: "You have been logged out." } });
+      // Commit the navigation right away; otherwise the current page's RequireAuth sees the null
+      // user first and its own redirect to /login replaces this one (dropping the notice).
+      flushSync(() => navigate("/login", { replace: true, state: { notice: "You have been logged out.", noticeTimeoutMs: 3000 } }));
+      // Drop the previous user's cached data (after the pages using it have unmounted).
+      queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== CURRENT_USER_KEY[0] });
     },
   });
 
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(ref, open, close);
 
   return (
     <div className="user-menu" ref={ref}>

@@ -2,7 +2,8 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 
 /**
  * Browser flow in real Chromium: sign up → verification email (Mailpit) → verify → log in, then the Kanban board:
- * pointer and keyboard drag, persistence across reload, cancel, no-op drop, failed-move rollback, open, filters.
+ * pointer and keyboard drag, persistence across reload, cancel, no-op drop, failed-move rollback, open, filters;
+ * then the header's brand menu and logging out.
  * Runs against the isolated stack from compose.e2e.yaml (fresh database, mail captured by Mailpit).
  */
 
@@ -189,6 +190,27 @@ test("filters: title search and type", async () => {
   await expect(card("Drag B")).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).first().click();
   await expect(page.locator(".column .card-ticket")).toHaveCount(3);
+});
+
+test("brand menu navigates between sections", async () => {
+  await page.getByRole("button", { name: /Ticket\s*Tracker/ }).click();
+  await page.getByRole("menuitem", { name: "Teams" }).click();
+  await expect(page).toHaveURL(/\/teams$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Teams");
+  await expect(page.getByRole("menuitem")).toHaveCount(0); // menu closed after navigating
+});
+
+test("logging out swaps the header to Log in / Sign up", async () => {
+  await page.getByRole("button", { name: `${EMAIL} ▾` }).click();
+  await page.getByRole("menuitem", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByText("You have been logged out.")).toBeVisible();
+  const header = page.locator("header");
+  await expect(header.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(header.getByRole("link", { name: "Sign up" })).toBeVisible();
+  await expect(header.getByRole("button", { name: `${EMAIL} ▾` })).toHaveCount(0);
+  await expect(header.getByRole("button", { name: /Ticket\s*Tracker/ })).toHaveCount(0);
+  await expect(page.getByText("You have been logged out.")).toBeHidden({ timeout: 5000 }); // auto-hides after 3s
 });
 
 test("no uncaught JavaScript errors", () => {
