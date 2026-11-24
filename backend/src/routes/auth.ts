@@ -40,14 +40,8 @@ authRouter.post("/verify-email", async (req, res) => {
 
 authRouter.post("/resend-verification", async (req, res) => {
   const body = z.union([z.object({ token }), z.object({ email })]).parse(req.body);
-  if ("token" in body) {
-    await resendByToken(body.token);
-  } else {
-    await resendByEmail(body.email);
-  }
-  res.status(202).json({
-    message: "If the account exists and is not yet verified, a new verification email has been sent.",
-  });
+  const sentTo = "token" in body ? await resendByToken(body.token) : await resendByEmail(body.email);
+  res.status(202).json({ email: sentTo, message: `A new verification email has been sent to ${sentTo}.` });
 });
 
 authRouter.post("/login", async (req, res) => {

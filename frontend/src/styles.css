@@ -671,6 +671,11 @@ a.menu-item.active {
   color: var(--success);
 }
 
+.notice.info {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
 .notice.dismissible {
   display: flex;
   align-items: flex-start;

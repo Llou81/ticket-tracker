@@ -17,7 +17,7 @@ export const verifyEmail = (token: string) =>
   post<{ status: "verified" | "already_verified" }>("/auth/verify-email", { token });
 
 export const resendVerification = (target: { token: string } | { email: string }) =>
-  post<{ message: string }>("/auth/resend-verification", target);
+  post<{ email: string; message: string }>("/auth/resend-verification", target);
 
 export const logIn = (email: string, password: string) =>
   post<{ user: User }>("/auth/login", { email, password }).then((r) => r.user);

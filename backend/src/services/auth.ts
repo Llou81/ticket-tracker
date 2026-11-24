@@ -75,8 +75,14 @@ export async function verifyEmail(token: string): Promise<VerifyResult> {
   });
 }
 
-/** Resend using a previous (possibly expired or superseded) token from a verification link. */
-export async function resendByToken(token: string): Promise<void> {
+const alreadyVerified = () =>
+  new HttpError(409, "This email address is already verified. You can log in.", "already_verified");
+
+/**
+ * Resend using a previous (possibly expired or superseded) token from a verification link.
+ * Returns the address the new link was sent to.
+ */
+export async function resendByToken(token: string): Promise<string> {
   const record = await prisma.emailVerificationToken.findUnique({
     where: { tokenHash: hashToken(token) },
     include: { user: true },
@@ -84,24 +90,30 @@ export async function resendByToken(token: string): Promise<void> {
   if (!record) {
     throw new HttpError(400, "This verification link is invalid.", "token_invalid");
   }
-  if (record.user.emailVerifiedAt) {
-    throw new HttpError(409, "This email address is already verified. You can log in.", "already_verified");
-  }
-  await issueOrFail(record.user);
+  if (record.user.emailVerifiedAt) throw alreadyVerified();
+  return issueOrFail(record.user);
 }
 
-/** Resend by email address. Responds the same whether or not the account exists. */
-export async function resendByEmail(email: string): Promise<void> {
+/**
+ * Resend by email address: only unverified, existing accounts get a new link; verified and unknown
+ * addresses get an explicit error. (Sign-up already reveals whether an address is registered.)
+ * Email must already be normalized. Returns the address the new link was sent to.
+ */
+export async function resendByEmail(email: string): Promise<string> {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || user.emailVerifiedAt) return;
-  await issueOrFail(user);
+  if (!user) {
+    throw new HttpError(404, "This email address is not registered. Sign up to create an account.", "email_not_registered");
+  }
+  if (user.emailVerifiedAt) throw alreadyVerified();
+  return issueOrFail(user);
 }
 
-async function issueOrFail(user: User) {
+async function issueOrFail(user: User): Promise<string> {
   const sent = await issueVerificationToken(user);
   if (!sent) {
     throw new HttpError(503, "The verification email could not be sent. Please try again later.", "email_send_failed");
   }
+  return user.email;
 }
 
 /** Invalidates earlier unused tokens, stores a new one, and emails it. Returns whether the email was sent. */

@@ -118,22 +118,56 @@ describe("email verification", () => {
 });
 
 describe("resend verification", () => {
-  it("responds identically for unknown emails and sends nothing", async () => {
-    const res = await resend({ email: "ghost@example.com" });
+  it("sends a new link to an existing unverified account and says where", async () => {
+    await signUp("hank@example.com");
+    const res = await resend({ email: "  HANK@example.com " });
     expect(res.status).toBe(202);
+    expect(res.body).toEqual({
+      email: "hank@example.com",
+      message: "A new verification email has been sent to hank@example.com.",
+    });
+    expect(mail.outbox).toHaveLength(2);
+    expect(mail.outbox[1].to).toBe("hank@example.com");
+    expect((await verify(tokenFrom(mail.outbox[1]))).body.status).toBe("verified");
+  });
+
+  it("reports an unregistered email and sends nothing", async () => {
+    const res = await resend({ email: "ghost@example.com" });
+    expect(res.status).toBe(404);
+    expect(res.body.code).toBe("email_not_registered");
+    expect(res.body.error).toBe("This email address is not registered. Sign up to create an account.");
     expect(mail.outbox).toHaveLength(0);
   });
 
-  it("does not resend for already-verified accounts", async () => {
+  it("reports an already-verified email (by address or old link) and sends nothing", async () => {
     await signUp("gina@example.com");
     const token = tokenFrom(mail.outbox[0]);
     await verify(token);
 
-    expect((await resend({ email: "gina@example.com" })).status).toBe(202);
-    expect(mail.outbox).toHaveLength(1);
+    const byEmail = await resend({ email: "Gina@Example.com" });
+    expect(byEmail.status).toBe(409);
+    expect(byEmail.body.code).toBe("already_verified");
+    expect(byEmail.body.error).toBe("This email address is already verified. You can log in.");
 
     const byToken = await resend({ token });
     expect(byToken.status).toBe(409);
     expect(byToken.body.code).toBe("already_verified");
+
+    expect(mail.outbox).toHaveLength(1);
+  });
+
+  it("validates the email address", async () => {
+    const res = await resend({ email: "not-an-email" });
+    expect(res.status).toBe(400);
+    expect(mail.outbox).toHaveLength(0);
+  });
+
+  it("reports a send failure with 503", async () => {
+    await signUp("ivan@example.com");
+    vi.spyOn(mailer, "send").mockRejectedValue(new Error("SMTP down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await resend({ email: "ivan@example.com" });
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe("email_send_failed");
   });
 });

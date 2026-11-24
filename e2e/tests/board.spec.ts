@@ -213,6 +213,21 @@ test("logging out swaps the header to Log in / Sign up", async () => {
   await expect(page.getByText("You have been logged out.")).toBeHidden({ timeout: 5000 }); // auto-hides after 3s
 });
 
+test("resend verification explains verified and unregistered addresses", async () => {
+  await page.getByRole("button", { name: "Resend verification email" }).click();
+  const form = page.locator("form.resend");
+  await form.getByLabel("Email").fill(EMAIL);
+  await form.getByRole("button", { name: "Send a new verification email" }).click();
+  await expect(form.getByRole("alert")).toContainText("This email address is already verified.");
+  await expect(form.getByRole("alert").getByRole("link", { name: "Log in" })).toBeVisible();
+
+  await form.getByLabel("Email").fill(`nobody-${Date.now()}@example.com`);
+  await expect(form.getByRole("alert")).toHaveCount(0); // editing clears the previous result
+  await form.getByRole("button", { name: "Send a new verification email" }).click();
+  await expect(form.getByRole("alert")).toContainText("This email address is not registered.");
+  await expect(form.getByRole("alert").getByRole("link", { name: "Sign up" })).toBeVisible();
+});
+
 test("no uncaught JavaScript errors", () => {
   expect(pageErrors).toEqual([]);
 });
